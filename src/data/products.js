@@ -681,30 +681,38 @@ export const products = [
   },
 ];
 
+// 📁 src/data/categoriesBanner.js
+
+import boysbanner from '../assets/images/products/boys/boysbanner.png';
+import girlsbanner from '../assets/images/products/girls/girlsbanner.png';
+import babybanner from '../assets/images/products/baby/babybanner.png';
+import learningbanner from '../assets/images/products/learning/learningbanner.png';
+import ridingbanner from '../assets/images/products/riding/ridingbanner.png';
+
 export const categoriesBanner = [
   {
     id: 1,
     category: "Boys",
-    image: `${import.meta.env.BASE_URL}images/products/boys/boysbanner.png`,
+    image: boysbanner,
   },
   {
     id: 2,
     category: "Girls",
-    image: `${import.meta.env.BASE_URL}images/products/girls/girlsbanner.png`,
+    image: girlsbanner,
   },
   {
     id: 3,
     category: "Baby",
-    image: `${import.meta.env.BASE_URL}images/products/baby/babybanner.png`,
+    image: babybanner,
   },
   {
     id: 4,
     category: "Learning",
-    image: `${import.meta.env.BASE_URL}images/products/learning/learningbanner.png`,
+    image: learningbanner,
   },
   {
     id: 5,
     category: "Riding",
-    image: `${import.meta.env.BASE_URL}images/products/riding/ridingbanner.png`,
+    image: ridingbanner,
   },
 ];
