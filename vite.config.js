@@ -3,6 +3,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base: '/toydazzlewebsite/', // <- Add this line
+  base: '/toydazzlewebsite/', 
   plugins: [react()],
 })

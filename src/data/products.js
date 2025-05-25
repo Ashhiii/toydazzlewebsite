@@ -685,26 +685,26 @@ export const categoriesBanner = [
   {
     id: 1,
     category: "Boys",
-    image: "/images/products/boys/boysbanner.png",
+    image: `${import.meta.env.BASE_URL}images/products/boys/boysbanner.png`,
   },
   {
     id: 2,
     category: "Girls",
-    image: "/images/products/girls/girlsbanner.png",
+    image: `${import.meta.env.BASE_URL}images/products/girls/girlsbanner.png`,
   },
   {
     id: 3,
     category: "Baby",
-    image: "/images/products/baby/babybanner.png",
+    image: `${import.meta.env.BASE_URL}images/products/baby/babybanner.png`,
   },
   {
     id: 4,
     category: "Learning",
-    image: "/images/products/learning/learningbanner.png",
+    image: `${import.meta.env.BASE_URL}images/products/learning/learningbanner.png`,
   },
   {
     id: 5,
     category: "Riding",
-    image: "/images/products/riding/ridingbanner.png",
+    image: `${import.meta.env.BASE_URL}images/products/riding/ridingbanner.png`,
   },
 ];
