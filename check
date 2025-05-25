@@ -1,0 +1,343 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import { supabase } from '../api/supabase';
+import { CheckBox } from 'react-native-elements';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+
+
+const CheckoutPage = () => {
+      const navigation = useNavigation();
+  const [cartItems, setCartItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState({});
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData?.user) return;
+
+      const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .eq('uid', authData.user.id)
+        .single();
+
+      const { data: order } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'To Pay')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('id, quantity, price, product:product_id ( id, name, image_url )')
+        .eq('order_id', order.id);
+
+      const defaultSelection = {};
+      items.forEach(item => {
+        defaultSelection[item.id] = false;
+      });
+
+      setCartItems(items);
+      setSelectedItems(defaultSelection);
+    };
+
+    fetchCartItems();
+  }, []);
+
+  useEffect(() => {
+    const computedTotal = cartItems.reduce((sum, item) => {
+      if (selectedItems[item.id]) {
+        return sum + item.price * item.quantity;
+      }
+      return sum;
+    }, 0);
+    setTotal(computedTotal);
+  }, [cartItems, selectedItems]);
+
+  const toggleCheckbox = (itemId) => {
+    setSelectedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
+  };
+
+const handleQuantityChange = async (itemId, action) => {
+  setCartItems(prev =>
+    prev.map(item => {
+      if (item.id === itemId) {
+        const newQty = action === 'increase' ? item.quantity + 1 : Math.max(1, item.quantity - 1);
+
+        // Update Supabase
+        supabase
+          .from('order_items')
+          .update({ quantity: newQty })
+          .eq('id', itemId)
+          .then(({ error }) => {
+            if (error) console.error('Error updating quantity:', error);
+          });
+
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    })
+  );
+};
+
+  const allSelected = Object.values(selectedItems).every(Boolean);
+
+const toggleSelectAll = () => {
+  const newState = {};
+  cartItems.forEach(item => {
+    newState[item.id] = !allSelected;
+  });
+  setSelectedItems(newState);
+};
+
+
+  const formatPrice = (price) => `₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+
+
+  const handleRemoveItem = async (itemId) => {
+    // Optionally, remove it from the database as well
+    await supabase.from('order_items').delete().eq('id', itemId);
+    setCartItems(prev => prev.filter(item => item.id !== itemId));
+  
+    // Also remove it from selected items state
+    setSelectedItems(prev => {
+      const updated = { ...prev };
+      delete updated[itemId];
+      return updated;
+    });
+  };
+
+  const handleCheckout = async () => {
+    const selectedIds = Object.keys(selectedItems).filter(id => selectedItems[id]);
+  
+    if (selectedIds.length === 0) {
+      alert('Please select at least one item.');
+      return;
+    }
+  
+    // Process checkout logic here, e.g., update status or navigate
+    console.log('Proceeding with items:', selectedIds);
+  };
+  
+  
+  const renderItem = ({ item }) => (
+    <View style={styles.card}>
+      <View style={styles.topRow}>
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity onPress={() => handleRemoveItem(item.id)}>
+        <Text style={styles.remove}>Remove</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.itemRow}>
+      <CheckBox
+        checked={allSelected}
+        onPress={toggleSelectAll}
+        containerStyle={styles.checkbox}
+        size={20}
+        />
+
+        <Image source={{ uri: item.product.image_url }} style={styles.image} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.name}>{item.product.name}</Text>
+          <Text style={styles.price}>{formatPrice(item.price)}</Text>
+          <View style={styles.qtyControls}>
+            <Text style={styles.qtyLabel}>Quantity:</Text>
+            <TouchableOpacity onPress={() => handleQuantityChange(item.id, 'decrease')} style={styles.qtyBtn}>
+              <Text style={styles.qtyText}>-</Text>
+            </TouchableOpacity>
+            <Text style={styles.qtyNumber}>{item.quantity}</Text>
+            <TouchableOpacity onPress={() => handleQuantityChange(item.id, 'increase')} style={styles.qtyBtn}>
+              <Text style={styles.qtyText}>+</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.headerRow}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.header}>My Cart ({cartItems.length})</Text>
+        
+      </View>
+
+      <FlatList
+    data={cartItems}
+    keyExtractor={(item) => item.id.toString()}
+    renderItem={renderItem}
+    contentContainerStyle={{ paddingBottom: 130 }}
+    showsVerticalScrollIndicator={false}
+  />
+<SafeAreaView style={styles.footer}>
+  <View style={styles.leftFooter}>
+    <CheckBox
+      checked={allSelected}
+      onPress={toggleSelectAll}
+      containerStyle={styles.checkbox}
+      size={20}
+    />
+    <Text style={styles.allText}>All</Text>
+  </View>
+
+  <View style={styles.rightFooter}>
+    <Text style={styles.totalText}>
+      Total: <Text style={{ fontWeight: 'bold' }}>{formatPrice(total)}</Text>
+    </Text>
+    <TouchableOpacity style={styles.checkoutBtn} onPress={handleCheckout}>
+      <Text style={styles.checkoutText}>Checkout</Text>
+    </TouchableOpacity>
+  </View>
+</SafeAreaView>
+        </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+    container: {
+    flex: 1, // Allow full screen height
+    backgroundColor: '#eee',
+    padding: 10,
+    justifyContent: 'space-between', // This ensures footer stays at the bottom
+    },
+
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+    top: 15,
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 5,
+  },
+  header: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  backButton: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  remove: {
+    color: 'red',
+    fontSize: 12,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center', // Changed from 'flex-start' to center-align checkbox and image
+},
+  checkbox: {
+    padding: 0,
+    margin: 0,
+    marginRight: 5,
+  },
+  
+  image: {
+    width: 80, // increased from 60
+    height: 80, // increased from 60
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  
+  name: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  price: {
+    fontSize: 13,
+    color: '#f47b00',
+    marginBottom: 6,
+  },
+  qtyControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  qtyLabel: {
+    fontSize: 13,
+    marginRight: 5,
+  },
+  qtyBtn: {
+    backgroundColor: '#ff5722',
+    borderRadius: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginHorizontal: 4,
+  },
+  qtyText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  qtyNumber: {
+    minWidth: 20,
+    textAlign: 'center',
+    fontSize: 13,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0, // add this
+    right: 0, // add this
+    backgroundColor: '#ffd700',
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderColor: '#ccc',
+  },
+  
+  totalText: {
+    fontSize: 14,
+    flex: 1,
+    marginLeft: 80,
+  },
+  checkoutBtn: {
+    backgroundColor: '#007bff',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginRight: 50,
+
+  },
+  checkoutText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  leftFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  
+  allText: {
+    fontSize: 14,
+    marginLeft: 0,
+  },
+  
+  rightFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+});
+
+export default CheckoutPage;

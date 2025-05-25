@@ -1,0 +1,46 @@
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Outfit:wght@100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.fredoka {
+  font-family: "Fredoka", sans-serif;
+  font-optical-sizing: auto;
+}
+
+.outfit {
+  font-family: "Outfit", sans-serif;
+  font-optical-sizing: auto;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  display: none !important;
+}
+
+.swiper-pagination-bullet {
+  width: 12px !important;
+  height: 12px !important;
+}
+
+.title {
+  white-space: nowrap; /* Changed from text-wrap to white-space */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px; /* Default max-width */
+  @apply max-h-[40px] overflow-hidden text-ellipsis;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .title {
+    max-width: 150px; /* For medium screens */
+  }
+}
+
+@media (min-width: 1024px) {
+  .title {
+    max-width: 350px; /* For large screens */
+  }
+}

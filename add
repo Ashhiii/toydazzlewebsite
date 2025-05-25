@@ -1,0 +1,81 @@
+import React from 'react';
+import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import { supabase } from '../api/supabase';
+import { useCart } from '../context/CartContext';
+
+const AddToCart = ({ product, quantity = 1 }) => {
+  const { fetchCartCount } = useCart();
+
+  const addToCart = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData?.user) return Alert.alert('Error', 'Not authenticated.');
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('uid', authData.user.id)
+      .single();
+
+    const localUserId = userData.id;
+
+    const { data: order } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', localUserId)
+      .eq('status', 'To Pay')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    let orderId = order?.id;
+    if (!orderId) {
+      const { data: newOrder } = await supabase
+        .from('orders')
+        .insert({
+          user_id: localUserId,
+          total_price: product.price * quantity,
+          status: 'To Pay',
+        })
+        .select()
+        .single();
+      orderId = newOrder.id;
+    }
+
+    await supabase.from('order_items').insert({
+      order_id: orderId,
+      product_id: product.id,
+      quantity,
+      price: product.price,
+    });
+
+    await supabase
+      .from('orders')
+      .update({ total_price: order?.total_price + product.price * quantity })
+      .eq('id', orderId);
+
+    fetchCartCount();
+    Alert.alert('Success', 'Added to cart!');
+  };
+
+  return (
+    <TouchableOpacity style={styles.addToCartBtn} onPress={addToCart}>
+      <Text style={styles.addToCartText}>Add to Cart</Text>
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  addToCartBtn: {
+    backgroundColor: '#FA6A02',
+    paddingVertical: 6,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  addToCartText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+});
+
+export default AddToCart;

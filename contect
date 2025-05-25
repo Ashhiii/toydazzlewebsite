@@ -1,0 +1,50 @@
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '../api/supabase';
+
+const CartContext = createContext();
+
+export const useCart = () => useContext(CartContext);
+
+export const CartProvider = ({ children }) => {
+  const [cartCount, setCartCount] = useState(0);
+
+  const fetchCartCount = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData?.user) return;
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('uid', authData.user.id)
+      .single();
+
+    const { data: order } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('user_id', userData.id)
+      .eq('status', 'To Pay')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (order) {
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('quantity')
+        .eq('order_id', order.id);
+
+      const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+      setCartCount(totalItems);
+    }
+  };
+
+  useEffect(() => {
+    fetchCartCount();
+  }, []);
+
+  return (
+    <CartContext.Provider value={{ cartCount, fetchCartCount }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
