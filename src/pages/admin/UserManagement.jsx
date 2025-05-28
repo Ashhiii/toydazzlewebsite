@@ -14,11 +14,12 @@ const UserManagement = () => {
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
   const [editUser, setEditUser] = useState({
-    firstName: "",
-    lastName: "",
+    first_name: "",
+    last_name: "",
     username: "",
     role: "user",
   });
+  
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
@@ -58,22 +59,22 @@ const UserManagement = () => {
 
   // Handle save edited user
   const handleEditSave = async () => {
-    const { firstName, lastName, username, role } = editUser;
+    const { first_name, last_name, username, role } = editUser;
 
-    if (!firstName || !lastName || !username || !role) {
+    if (!first_name || !last_name || !username || !role) {
       toast.error("All fields are required.");
       return;
     }
-
+    
     setActionInProgress(true);
     try {
       const { error } = await supabase
         .from("users")
-        .update({ firstName, lastName, username, role })
+        .update({ first_name, last_name, username, role }) // ✅ snake_case
         .eq("id", editId);
-
+    
       if (error) throw error;
-
+    
       toast.success("User updated.");
       setEditId(null);
       fetchUsers();
@@ -82,7 +83,7 @@ const UserManagement = () => {
       console.error(error);
     }
     setActionInProgress(false);
-  };
+  }    
 
   // Filter users by search term
   const filteredUsers = users.filter((user) =>
@@ -129,11 +130,11 @@ const UserManagement = () => {
                       {editId === user.id ? (
                         <input
                           type="text"
-                          value={editUser.firstName}
+                          value={editUser.first_name || ""}
                           onChange={(e) =>
                             setEditUser({
                               ...editUser,
-                              firstName: e.target.value,
+                              first_name: e.target.value,
                             })
                           }
                           onKeyDown={(e) =>
@@ -149,7 +150,7 @@ const UserManagement = () => {
                       {editId === user.id ? (
                         <input
                           type="text"
-                          value={editUser.lastName}
+                          value={editUser.last_name || ""}
                           onChange={(e) =>
                             setEditUser({
                               ...editUser,
@@ -169,7 +170,7 @@ const UserManagement = () => {
                       {editId === user.id ? (
                         <input
                           type="text"
-                          value={editUser.username}
+                          value={editUser.last_name || ""}
                           onChange={(e) =>
                             setEditUser({
                               ...editUser,
@@ -223,11 +224,11 @@ const UserManagement = () => {
                           onClick={() => {
                             setEditId(user.id);
                             setEditUser({
-                              firstName: user.first_name,
-                              lastName: user.last_name,
+                              first_name: user.first_name,
+                              last_name: user.last_name,
                               username: user.username,
                               role: user.role,
-                            });
+                            });                            
                           }}
                           className="text-blue-600 p-2 border rounded hover:bg-blue-100"
                         >

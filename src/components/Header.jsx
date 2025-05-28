@@ -98,7 +98,9 @@ const Header = () => {
         return;
       }
 
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(data.email);
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(data.email, {
+          redirectTo: 'http://localhost:5173/reset-password/',
+      });
       if (resetError) throw resetError;
 
       toast.success("A password reset link has been sent to your email address.");

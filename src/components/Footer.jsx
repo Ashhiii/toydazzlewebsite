@@ -6,12 +6,30 @@ const Footer = () => {
       {/* Container for the footer content */}
       <div className="flex flex-col lg:flex-row bg-[#007FFF] justify-center lg:justify-between items-center py-6 lg:py-10 px-6 lg:px-16 xl:px-40">
         
-        {/* Logo and download button section */}
+        {/* Logo and QR download section */}
         <div className="logo flex flex-col items-center mb-4 lg:mb-0">
-          <img src="/images/logo.png" alt="" width="250" />
-          <button className="bg-[#FA6A02] text-2xl font-semibold h-[55px] px-8 rounded-full fredoka text-white mt-4 lg:mt-0">
-            Download App
-          </button>
+          <img src="/images/Logo.png" alt="ToyDazzle Logo" width="150" />
+
+          {/* QR code and download section */}
+          <div className="flex flex-col items-center mt-4">
+            <p className="text-white text-lg font-medium mb-2">Scan to Download</p>
+            <img
+              src="/images/qrcode/qr.png"
+              alt="QR Code"
+              width="200"
+              height="200"
+              className="mb-4"
+            />
+            <a
+              href="https://expo.dev/accounts/jepep/projects/ToyDazzle/builds/33db431c-d4b1-48a6-9e6d-e7aeaccb23ae"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <button className="bg-[#FA6A02] text-2xl font-semibold h-[55px] px-8 rounded-full fredoka text-white">
+                Download App
+              </button>
+            </a>
+          </div>
         </div>
 
         {/* About Us section */}
@@ -44,44 +62,20 @@ const Footer = () => {
           </h1>
           <div className="flex gap-4">
             <div className="flex items-center pl-20">
-              <img
-                src="/images/socials/fb.webp"
-                alt=""
-                width="30"
-                loading="lazy"
-              />
+              <img src="/images/socials/fb.webp" alt="Facebook" width="30" loading="lazy" />
             </div>
             <div className="flex items-center ">
-              <img
-                src="/images/socials/ig.webp"
-                alt=""
-                width="30"
-                loading="lazy"
-              />
+              <img src="/images/socials/ig.webp" alt="Instagram" width="30" loading="lazy" />
             </div>
             <div className="flex items-center ">
-              <img
-                src="/images/socials/twitter.webp"
-                alt=""
-                width="30"
-                loading="lazy"
-              />
+              <img src="/images/socials/twitter.webp" alt="Twitter" width="30" loading="lazy" />
             </div>
             <div className="flex items-center pr-7">
-              <img
-                src="/images/socials/pinterest.webp"
-                alt=""
-                width="30"
-                loading="lazy"
-              />
-            </div>
-            <div className="flex items-center ">
-              <img src="/images/yt.png" alt="" width="40" loading="lazy" />
+              <img src="/images/socials/pinterest.webp" alt="Pinterest" width="30" loading="lazy" />
             </div>
           </div>
         </div>
       </div>
-      
       {/* Footer bottom section */}
       <div className="bg-[#FFD72D]">
         <h1 className="text-center text-[#007FFF] outfit text-xl py-4 font-bold">

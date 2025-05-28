@@ -681,38 +681,30 @@ export const products = [
   },
 ];
 
-// 📁 src/data/categoriesBanner.js
-
-import boysbanner from '../assets/images/products/boys/boysbanner.png';
-import girlsbanner from '../assets/images/products/girls/girlsbanner.png';
-import babybanner from '../assets/images/products/baby/babybanner.png';
-import learningbanner from '../assets/images/products/learning/learningbanner.png';
-import ridingbanner from '../assets/images/products/riding/ridingbanner.png';
-
 export const categoriesBanner = [
   {
     id: 1,
     category: "Boys",
-    image: boysbanner,
+    image: "/images/products/boys/boysbanner.png",
   },
   {
     id: 2,
     category: "Girls",
-    image: girlsbanner,
+    image: "/images/products/girls/girlsbanner.png",
   },
   {
     id: 3,
     category: "Baby",
-    image: babybanner,
+    image: "/images/products/baby/babybanner.png",
   },
   {
     id: 4,
     category: "Learning",
-    image: learningbanner,
+    image: "/images/products/learning/learningbanner.png",
   },
   {
     id: 5,
     category: "Riding",
-    image: ridingbanner,
+    image: "/images/products/riding/ridingbanner.png",
   },
 ];

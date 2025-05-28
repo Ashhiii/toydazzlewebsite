@@ -55,7 +55,6 @@ const Aside = () => {
             <FaUsers size={20} />
             Manage Users
           </NavLink>
-          {/* New link to manage purchased history */}
           <NavLink to="/admin/purchased" className={navLinkClasses}>
             <GiShoppingCart size={20} />
             Manage Purchased History

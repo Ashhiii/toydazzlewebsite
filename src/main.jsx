@@ -27,6 +27,8 @@ import Help from "./pages/Help.jsx";
 import MyProfile from "./pages/MyProfile.jsx";
 import PurchasedHistory from "./pages/admin/PurchasedHistory.jsx";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import ResetPassword from './pages/ResetPassword'; // Adjust path
+
 
 
 const router = createBrowserRouter(
@@ -43,6 +45,8 @@ const router = createBrowserRouter(
       <Route path="/help" element={<Help />} />
       <Route path="/profile" element={<MyProfile/>} />
       <Route path="/order-confirmation" element={<OrderConfirmation />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+
 
 
       {/* Protected Admin Routes */}

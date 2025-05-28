@@ -33,23 +33,22 @@ const ProductManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const fileInputRef = useRef(null);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  
 
 
   // PAGINATION LOGIC
   const filteredProducts = products.filter((prod) => {
     const matchCategory = selectedCategory
-      ? prod.category === selectedCategory
+      ? prod.categories?.name === selectedCategory
       : true;
-    const matchSearch = prod.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const matchSearch = prod.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchCategory && matchSearch;
   });
 
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const startIndex = (currentPage - 1) * productsPerPage;
+  const indexOfLastProduct = currentPage * productsPerPage;
+const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
   const currentProducts = filteredProducts.slice(
     startIndex,
     startIndex + productsPerPage
@@ -85,7 +84,7 @@ const ProductManagement = () => {
     setNewProduct((prev) => ({ ...prev, image: e.target.files[0] }));
   };
 
- const handleAddProduct = async () => {
+  const handleAddProduct = async () => {
     const { name, category_id, description, price, stock, tag, image } = newProduct;
 
     if (!name || !category_id || !description || !price || !stock || !image) {
@@ -147,7 +146,43 @@ const ProductManagement = () => {
     setActionInProgress(false);
   };
   
+  
 
+  const handleDelete = async (productId) => {
+    setActionInProgress(true);
+  
+    // Step 1: Delete related order_items
+    const { error: orderItemsError } = await supabase
+      .from("order_items")
+      .delete()
+      .eq("product_id", productId);
+  
+    if (orderItemsError) {
+      console.error("Error deleting related order items:", orderItemsError);
+      toast.error("Failed to delete related order items");
+      setActionInProgress(false);
+      return;
+    }
+  
+    // Step 2: Delete the product
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", productId);
+  
+    setActionInProgress(false);
+  
+    if (error) {
+      console.error("Error deleting product:", error);
+      toast.error("Error deleting product");
+    } else {
+      toast.success("Product deleted successfully");
+      fetchProducts();
+    }
+  };
+  
+  
+  
   const startEdit = (product) => {
     setEditId(product.id);
     setEditProduct({
@@ -520,44 +555,44 @@ const ProductManagement = () => {
           prod.stock
         )}
       </td>
+      <td className="px-4 py-10 flex items-center gap-2">
+  {editId === prod.id ? (
+    <>
+      <button
+        onClick={handleEditSave}
+        className="text-green-600 hover:text-green-800"
+        disabled={actionInProgress}
+      >
+        <MdCheck size={20} />
+      </button>
+      <button
+        onClick={() => setEditId(null)}
+        className="text-gray-600 hover:text-gray-800"
+      >
+        Cancel
+      </button>
+    </>
+  ) : (
+    <>
+      <button
+        onClick={() => startEdit(prod)}
+        className="text-blue-600 hover:text-blue-800"
+      >
+        <FiEdit size={18} />
+      </button>
+      <button
+        onClick={() => {
+          setProductToDelete(prod.id);
+          setShowSingleDeleteModal(true);
+        }}
+        className="text-red-600 hover:text-red-800"
+      >
+        <MdDelete size={20} />
+      </button>
+    </>
+  )}
+</td>
 
-      <td className="px-4 py-3 space-x-2">
-        {editId === prod.id ? (
-          <>
-            <button
-              onClick={handleEditSave}
-              className="text-green-600 hover:text-green-800"
-              disabled={actionInProgress}
-            >
-              <MdCheck size={20} />
-            </button>
-            <button
-              onClick={() => setEditId(null)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={() => startEdit(prod)}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              <FiEdit size={20} />
-            </button>
-            <button
-              onClick={() => {
-                setProductToDelete(prod.id);
-                setShowSingleDeleteModal(true);
-              }}
-              className="text-red-600 hover:text-red-800"
-            >
-              <MdDelete size={20} />
-            </button>
-            </>
-                    )}
-                    </td>
                   </tr>
                 ))}
               
@@ -660,95 +695,58 @@ const ProductManagement = () => {
         )}
 
         {/* Confirm Singe Delete  Modal */}
-        {showSingleDeleteModal && productToDelete && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-md shadow-md max-w-md w-full">
-              <h3 className="text-xl font-semibold mb-4">Delete Product</h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to delete the product{" "}
-                <strong>{productToDelete.name}</strong> ? This action cannot be
-                undone.
-              </p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowSingleDeleteModal(false)}
-                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={async () => {
-                    await handleDelete(productToDelete.id);
-                    setShowSingleDeleteModal(false);
-                    setCategoryToDelete(null);
-                  }}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                  disabled={actionInProgress}
-                >
-                  {actionInProgress ? (
-                    <div className="flex items-center gap-2">
-                      <l-ring
-                        size="24"
-                        stroke="3"
-                        bg-opacity="0"
-                        speed="2"
-                        color="white"
-                      ></l-ring>
+        {showSingleDeleteModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-sm">
+      <p className="mb-4">Are you sure you want to delete this product?</p>
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setShowSingleDeleteModal(false)}
+          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={async () => {
+            await handleDelete(productToDelete);
+            setShowSingleDeleteModal(false);
+            fetchProducts();
+          }}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
-                      <h2>Deleting</h2>
-                    </div>
-                  ) : (
-                    "Delete Product"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Confirm Delete All Modal */}
         {showConfirmModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-md shadow-md max-w-md w-full">
-              <h3 className="text-xl font-semibold mb-4">
-                Delete All Products
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to delete all products? This action cannot
-                be undone.
-              </p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowConfirmModal(false)}
-                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteAll}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                  disabled={actionInProgress}
-                >
-                  {actionInProgress ? (
-                    <div className="flex items-center gap-2">
-                      <l-ring
-                        size="24"
-                        stroke="3"
-                        bg-opacity="0"
-                        speed="2"
-                        color="white"
-                      ></l-ring>
+  <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-sm">
+      <p className="mb-4 font-semibold text-center">
+        Are you sure you want to delete all products?
+      </p>
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setShowConfirmModal(false)}
+          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleDeleteAll}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+        >
+          Delete All
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
-                      <h2>Deleting</h2>
-                    </div>
-                  ) : (
-                    "Delete All"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );
