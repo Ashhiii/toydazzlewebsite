@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import {
   FaTruck,
@@ -16,6 +17,8 @@ const Purchases = () => {
   const [filter, setFilter] = useState("All");
   const [cancelReason, setCancelReason] = useState("");
   const [showCancelPrompt, setShowCancelPrompt] = useState(false);
+  const navigate = useNavigate();
+
 
   const steps = [
     { name: "To Pay", icon: <FaCreditCard />, color: "blue" },
@@ -197,8 +200,8 @@ const Purchases = () => {
                 <p className="text-sm">Reason: {selectedOrder.cancel_reason}</p>
                 <button
                   className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-full"
-                  onClick={() => alert("Redirecting to buy again...")}
-                >
+                  onClick={() => navigate("/")}
+                  >
                   Buy Again
                 </button>
               </div>
