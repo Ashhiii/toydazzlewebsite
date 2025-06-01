@@ -238,6 +238,14 @@ const Header = () => {
                       </Link>
 
                       <Link
+                        to="/address"
+                        onClick={() => setLoginNav(false)}
+                        className="py-2 px-4 hover:bg-gray-200 outfit"
+                      >
+                      Address                     
+                       </Link>
+
+                      <Link
                         to="/help"
                         onClick={() => setLoginNav(false)}
                         className="py-2 px-4 hover:bg-gray-200 outfit"

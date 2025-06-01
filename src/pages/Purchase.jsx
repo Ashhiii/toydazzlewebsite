@@ -117,7 +117,7 @@ const Purchases = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Your Purchases</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">My Purchases</h1>
 
       <div className="flex flex-wrap gap-2 justify-center mb-6">
         {["All", "To Pay", "To Ship", "To Receive", "Completed", "Cancelled"].map((status) => (

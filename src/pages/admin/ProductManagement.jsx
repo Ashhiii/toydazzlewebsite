@@ -19,7 +19,7 @@ const ProductManagement = () => {
     tag: "",
     image: null,
   });
-
+  
   const [editId, setEditId] = useState(null);
   const [editProduct, setEditProduct] = useState({});
   const [loading, setLoading] = useState(true);
@@ -33,6 +33,8 @@ const ProductManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const fileInputRef = useRef(null);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  
+
 
   // PAGINATION LOGIC
   const filteredProducts = products.filter((prod) => {
@@ -45,6 +47,8 @@ const ProductManagement = () => {
 
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const startIndex = (currentPage - 1) * productsPerPage;
+  const indexOfLastProduct = currentPage * productsPerPage;
+const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
   const currentProducts = filteredProducts.slice(
     startIndex,
     startIndex + productsPerPage
@@ -71,38 +75,15 @@ const ProductManagement = () => {
     fetchProducts();
   }, []);
 
-  // Handle new product input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewProduct((prev) => ({ ...prev, [name]: value }));
-  };
+  };  
 
   const handleFileChange = (e) => {
     setNewProduct((prev) => ({ ...prev, image: e.target.files[0] }));
   };
 
-  // Upload image to Supabase Storage and return public URL
-  const uploadImageToStorage = async (imageFile) => {
-    const fileExt = imageFile.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    // Upload image
-    const { error: uploadError } = await supabase.storage
-      .from('product-images') // Your bucket name here
-      .upload(filePath, imageFile);
-
-    if (uploadError) throw uploadError;
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
-  };
-
-  // Add new product
   const handleAddProduct = async () => {
     const { name, category_id, description, price, stock, tag, image } = newProduct;
 
@@ -114,10 +95,18 @@ const ProductManagement = () => {
     setActionInProgress(true);
 
     try {
-      // Upload image and get URL
-      const imageURL = await uploadImageToStorage(image);
-
-      // Insert product with image URL
+      // Upload image
+      const formData = new FormData();
+      formData.append("image", image);
+  
+      const res = await fetch("http://localhost:5000/upload", {
+        method: "POST",
+        body: formData,
+      });
+  
+      const data = await res.json();
+      const imageURL = data.imageURL;
+  
       const { error } = await supabase.from("products").insert([
         {
           name,
@@ -142,46 +131,47 @@ const ProductManagement = () => {
         tag: "",
         image: null,
       });
-
+  
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-
+  
       toast.success("Product added successfully.");
       fetchProducts();
     } catch (error) {
       toast.error("Failed to add product.");
       console.error(error);
     }
-
+  
     setActionInProgress(false);
   };
+  
+  
 
-  // Delete product (and related order items)
   const handleDelete = async (productId) => {
     setActionInProgress(true);
-
-    // Delete related order_items first
+  
+    // Step 1: Delete related order_items
     const { error: orderItemsError } = await supabase
       .from("order_items")
       .delete()
       .eq("product_id", productId);
-
+  
     if (orderItemsError) {
       console.error("Error deleting related order items:", orderItemsError);
       toast.error("Failed to delete related order items");
       setActionInProgress(false);
       return;
     }
-
-    // Delete product
+  
+    // Step 2: Delete the product
     const { error } = await supabase
       .from("products")
       .delete()
       .eq("id", productId);
-
+  
     setActionInProgress(false);
-
+  
     if (error) {
       console.error("Error deleting product:", error);
       toast.error("Error deleting product");
@@ -190,8 +180,9 @@ const ProductManagement = () => {
       fetchProducts();
     }
   };
-
-  // Start editing a product
+  
+  
+  
   const startEdit = (product) => {
     setEditId(product.id);
     setEditProduct({
@@ -200,41 +191,43 @@ const ProductManagement = () => {
       price: product.price,
       stock: product.stock,
       description: product.description,
-      tag: product.tag ? product.tag.join(", ") : "",
-      image: null,
-      image_url: product.image_url,
+      tag: product.tag,
+      image: null, // for new upload
+      image_url: product.image_url, // existing image
     });
   };
-
-  // Handle changes in edit form
+  
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditProduct((prev) => ({ ...prev, [name]: value }));
   };
-
-  const handleEditFileChange = (e) => {
-    setEditProduct((prev) => ({ ...prev, image: e.target.files[0] }));
-  };
-
-  // Save edits
   const handleEditSave = async () => {
-    const { name, category_id, price, stock, description, tag, image, image_url } = editProduct;
-
+    const { name, category_id, price, stock, description, tag, image } = editProduct;
+  
     if (!name || !category_id || !price || !stock) {
       toast.error("Please fill in all required fields.");
       return;
     }
-
+  
     setActionInProgress(true);
-
+  
     try {
-      let finalImageURL = image_url;
-
-      // Upload new image if selected
+      let imageURL = editProduct.image_url;
+  
+      // Check if there's a new image to upload
       if (image) {
-        finalImageURL = await uploadImageToStorage(image);
+        const formData = new FormData();
+        formData.append("image", image);
+  
+        const res = await fetch("http://localhost:5000/upload", {
+          method: "POST",
+          body: formData,
+        });
+  
+        const data = await res.json();
+        imageURL = data.imageURL;
       }
-
+  
       const { error } = await supabase
         .from("products")
         .update({
@@ -244,12 +237,12 @@ const ProductManagement = () => {
           stock: parseInt(stock),
           description,
           tag: tag ? tag.split(",").map((t) => t.trim()) : [],
-          image_url: finalImageURL,
+          image_url: imageURL, // <-- Update image_url here
         })
         .eq("id", editId);
-
+  
       if (error) throw error;
-
+  
       setEditId(null);
       setEditProduct({});
       toast.success("Product updated successfully.");
@@ -258,11 +251,11 @@ const ProductManagement = () => {
       toast.error("Failed to update product.");
       console.error(error);
     }
-
+  
     setActionInProgress(false);
   };
+  
 
-  // Delete all products
   const handleDeleteAll = async () => {
     setActionInProgress(true);
     try {
@@ -282,9 +275,6 @@ const ProductManagement = () => {
     document.body.style.overflow =
       showSingleDeleteModal || showConfirmModal ? "hidden" : "auto";
   }, [showSingleDeleteModal, showConfirmModal]);
-
-  // Render (simplified)
-  if (loading || loadingCategories) return <Loader />;
 
   return (
     <div className="flex min-h-screen p-10 bg-[#FFF7F0] font-sans">

@@ -162,17 +162,6 @@ const ProductInformation = () => {
           </div>
         </div>
       </div>
-      <div className="h-full py-12 flex flex-col text-center bg-white shadow-lg mt-8">
-        <h1 className="fredoka text-2xl md:text-3xl font-semibold">
-          Customer Reviews
-        </h1>
-        <p className="text-lg md:text-xl fredoka font-medium mt-2">
-          No reviews yet. Any feedback? Let us know
-        </p>
-        <button className="w-[80%] md:w-[50%] lg:w-[30%] mx-auto fredoka mt-8 text-lg md:text-2xl font-semibold bg-[#FA6A02] text-white h-[50px] md:h-[60px]">
-          Write Review
-        </button>
-      </div>
     </div>
   );
 };

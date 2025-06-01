@@ -16,6 +16,56 @@ const Checkout = () => {
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [trackingInfo, setTrackingInfo] = useState(null);
 
+  // Address state
+  const [address, setAddress] = useState(null);
+  const [loadingAddress, setLoadingAddress] = useState(true);
+
+  // Fetch user address on mount
+  useEffect(() => {
+    const fetchAddress = async () => {
+      setLoadingAddress(true);
+    
+      const { data: authUser, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser?.user?.id) {
+        setLoadingAddress(false);
+        return;
+      }
+    
+      const supabaseUid = authUser.user.id;
+    
+      // Optionally fetch local user ID if needed for other logic
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("uid", supabaseUid)
+        .single();
+    
+      if (userError || !userData?.id) {
+        setLoadingAddress(false);
+        return;
+      }
+    
+      // Fetch the address filtering by supabaseUid (UUID)
+      const { data: addressData, error: addressError } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", supabaseUid)  // use UUID here
+        .single();
+    
+      if (addressError) {
+        console.error("Error fetching address:", addressError.message);
+        setAddress(null);
+      } else {
+        setAddress(addressData);
+      }
+    
+      setLoadingAddress(false);
+    };
+    
+
+    fetchAddress();
+  }, []);
+
   const toggleTracking = async (orderId) => {
     setIsTrackingOpen(!isTrackingOpen);
 
@@ -23,7 +73,7 @@ const Checkout = () => {
       // Fetch tracking information for the specific order
       const { data, error } = await supabase
         .from("orders")
-        .select("status, tracking_info,") // You can adjust the fields you need
+        .select("status, tracking_info")
         .eq("id", orderId)
         .single();
 
@@ -62,27 +112,27 @@ const Checkout = () => {
         alert("You need to be logged in to checkout.");
         return;
       }
-  
+
       const supabaseUid = authUser.user.id;
-  
+
       const { data: userData, error: userError } = await supabase
         .from("users")
         .select("id")
         .eq("uid", supabaseUid)
         .single();
-  
+
       if (userError || !userData?.id) {
         alert("Error fetching user data.");
         return;
       }
-  
+
       const localUserId = userData.id;
-  
+
       if (!totalPrice || totalPrice <= 0) {
         alert("Invalid total price.");
         return;
       }
-  
+
       // Step 1: Insert into orders table
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
@@ -96,27 +146,27 @@ const Checkout = () => {
         ])
         .select()
         .single();
-  
+
       if (orderError || !orderData?.id) {
         alert("Error placing order.");
         return;
       }
-  
+
       const orderId = orderData.id;
-  
+
       // Step 2: Fetch product images from the products table
       const productIds = cartItems.map((item) => item.id);
       const { data: productData, error: productError } = await supabase
         .from("products")
         .select("id, image_url")
         .in("id", productIds);
-  
+
       if (productError || !productData) {
         console.error("Error fetching product data:", productError?.message);
         alert("Failed to fetch product images.");
         return;
       }
-  
+
       // Step 3: Insert each cart item into order_items with fetched image URL
       const orderItemsData = cartItems.map((item) => {
         const product = productData.find((p) => p.id === item.id);
@@ -125,30 +175,28 @@ const Checkout = () => {
           product_id: item.id,
           quantity: item.quantity,
           price: item.price,
-          image_url: product?.image_url || null, 
+          image_url: product?.image_url || null,
         };
       });
-  
+
       const { error: orderItemsError } = await supabase
         .from("order_items")
         .insert(orderItemsData);
-  
+
       if (orderItemsError) {
         console.error("Error inserting order items:", orderItemsError.message);
         alert("Error placing order items.");
         return;
       }
-  
-      
+
       dispatch(clearCart());
       navigate("/order-confirmation");
-  
     } catch (err) {
       console.error("Checkout failed:", err.message);
       alert("Failed to place order.");
     }
   };
-  
+
   return (
     <div className="px-4 lg:px-8 xl:px-16 py-6 bg-gray-100">
       {cartItems.length > 0 ? (
@@ -186,6 +234,22 @@ const Checkout = () => {
           <div className="lg:col-span-2 xl:col-span-3">
             <div className="bg-white rounded-lg shadow-md p-4">
               <h2 className="text-xl font-bold text-[#2BBD6E] mb-4">ORDER SUMMARY</h2>
+
+              {/* Shipping Address */}
+              {loadingAddress ? (
+                <p>Loading address...</p>
+              ) : address ? (
+                <div className="my-4 p-4 bg-gray-50 rounded-md">
+                  <h3 className="text-lg font-semibold mb-2">Shipping Address</h3>
+                  <p>{address.barangay}</p>
+                  <p>{address.city}, {address.province}, {address.postal_code}</p>
+                </div>
+              ) : (
+                <p className="my-4 text-red-500">
+                  No shipping address found. Please add one in your profile.
+                </p>
+              )}
+
 
               <div className="flex flex-col gap-2">
                 {/* Mode of Payment, Total, Discount, Subtotal */}
@@ -238,11 +302,15 @@ const Checkout = () => {
 
               {/* Proceed to Purchases Button */}
               <button
-                onClick={handleCheckout}
-                className="block w-full text-center bg-[#2BBD6E] text-white font-semibold py-3 rounded-lg mt-4"
-              >
-                Place Order
-              </button>
+  onClick={handleCheckout}
+  disabled={!address}
+  className={`block w-full text-center font-semibold py-3 rounded-lg mt-4 ${
+    address ? "bg-[#2BBD6E] text-white" : "bg-gray-400 text-gray-200 cursor-not-allowed"
+  }`}
+>
+  Place Order
+</button>
+
 
               {/* Cancel Order Button */}
               <Link

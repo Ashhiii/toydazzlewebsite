@@ -14,6 +14,13 @@ const PurchasedHistory = () => {
   const [actionInProgress, setActionInProgress] = useState(false);
   const [showSingleDeleteModal, setShowSingleDeleteModal] = useState(false);
   const [purchaseToDelete, setPurchaseToDelete] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  const filteredPurchases =
+  statusFilter === "All"
+    ? purchases
+    : purchases.filter((purchase) => purchase.status === statusFilter);
+
 
   // Fetch purchase history from Supabase
   const fetchPurchases = async () => {
@@ -152,7 +159,7 @@ const PurchasedHistory = () => {
 
       <Aside />
 
-      <main className="flex-1 ml-72 p-10">
+<main className="flex-1 ml-72 p-10 overflow-auto">
         <h2 className="text-3xl font-bold text-[#F59E0B] mb-6">
           Purchase History
         </h2>
@@ -163,6 +170,21 @@ const PurchasedHistory = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
+            <div className="mb-4">
+            <label className="mr-2 text-gray-700 font-medium">Filter by Status:</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-gray-300 p-2 rounded"
+            >
+              <option value="All">All</option>
+              <option value="To Pay">To Pay</option>
+              <option value="To Ship">To Ship</option>
+              <option value="To Receive">To Receive</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+
             <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
               <thead className="bg-[#F59E0B] text-white">
                 <tr>
@@ -177,7 +199,7 @@ const PurchasedHistory = () => {
                 </tr>
               </thead>
               <tbody>
-  {purchases.map((purchase) =>
+              {filteredPurchases.map((purchase) =>
     purchase.order_items.map((item, index) => (
       <tr key={`${purchase.id}-${index}`} className="border-b">
         <td className="px-4 py-3">{purchase.id}</td>

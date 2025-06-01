@@ -3,7 +3,8 @@ import { MdCategory } from "react-icons/md";
 import { FiPackage } from "react-icons/fi";
 import { FaUsers } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
-import { GiShoppingCart } from "react-icons/gi";  // Import an icon for purchased history
+import { GiShoppingCart } from "react-icons/gi";
+import { FaMapMarkerAlt } from "react-icons/fa"; 
 import { NavLink, useNavigate } from "react-router-dom";
 
 const Aside = () => {
@@ -18,7 +19,6 @@ const Aside = () => {
 
   return (
     <aside className="w-72 bg-gradient-to-b from-[#F59E0B] to-[#D97706] text-white p-6 flex flex-col fixed top-0 left-0 bottom-0 shadow-lg">
-      {/* Back Button */}
       <button
         onClick={() => navigate("/")}
         className="flex items-center gap-2 text-white hover:text-white font-semibold mb-4 transition-all duration-200 rounded-md hover:bg-[#FFB347] px-3 py-2"
@@ -58,6 +58,10 @@ const Aside = () => {
           <NavLink to="/admin/purchased" className={navLinkClasses}>
             <GiShoppingCart size={20} />
             Manage Purchased History
+          </NavLink>
+          <NavLink to="/admin/addresses" className={navLinkClasses}>
+            <FaMapMarkerAlt size={20} />
+            Manage Addresses
           </NavLink>
         </nav>
       </div>

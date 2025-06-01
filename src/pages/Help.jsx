@@ -36,7 +36,7 @@ const Help = () => {
             {
               question: "What are the accepted payment methods?",
               answer:
-                "We accept major credit cards, debit cards, PayPal, and other secure payment methods. Please refer to our payment page for more details.",
+                "We accept Cash on Delivery (COD) payment method. Please refer to our payment page for more details.",
             },
             {
               question: "Can I change my shipping address after placing an order?",

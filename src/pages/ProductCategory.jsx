@@ -6,7 +6,6 @@ import useProducts from "../hooks/useProducts";
 import Loader from "../components/Loader";
 
 const ProductCategory = () => {
-  // Get the category parameter from url
   const { category } = useParams();
   const { products, loading } = useProducts();
 

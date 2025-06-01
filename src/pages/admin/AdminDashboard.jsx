@@ -158,6 +158,12 @@ const AdminDashboard = () => {
               <p className="text-gray-700">View users who have made purchases.</p>
               <span className="block mt-6 text-[#FF7F50] font-semibold hover:underline">View Purchases</span>
             </NavLink>
+
+            <NavLink to="/admin/addresses" className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300 border-l-4 border-[#FF6347] hover:bg-[#FFF1E0] cursor-pointer block">
+              <h3 className="text-2xl font-bold text-[#FF6347] mb-4">Address</h3>
+              <p className="text-gray-700">View users address.</p>
+              <span className="block mt-6 text-[#FF7F50] font-semibold hover:underline">View Addresses</span>
+            </NavLink>
           </div>
 
           <button

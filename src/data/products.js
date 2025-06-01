@@ -707,4 +707,9 @@ export const categoriesBanner = [
     category: "Riding",
     image: "/images/products/riding/ridingbanner.png",
   },
+  {
+    id: 6,
+    category: "Games",
+    image: "/images/products/games/gamesbanner.png",
+  },
 ];

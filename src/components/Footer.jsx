@@ -21,7 +21,7 @@ const Footer = () => {
               className="mb-4"
             />
             <a
-              href="https://expo.dev/accounts/jepep/projects/ToyDazzle/builds/33db431c-d4b1-48a6-9e6d-e7aeaccb23ae"
+              href="https://expo.dev/accounts/jepjep/projects/ToyDazzle/builds/06c791c7-66f7-4e1b-96e9-52d084b6e705"
               target="_blank"
               rel="noopener noreferrer"
             >
